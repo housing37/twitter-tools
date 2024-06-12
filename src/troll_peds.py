@@ -30,18 +30,49 @@ DICT_LOGINS ={
 #------------------------------------------------------------#
 # ref: gen_img.py (class BingImgGenerator)
 def perform_login(_driver):
-    INP_EMAIL = (By.ID, "i0116")
-    BTN_NEXT = (By.ID, "idSIButton9")
-    INP_PW = (By.ID, "i0118")
+    # INP_EMAIL = (By.ID, "i0116")
+    # BTN_NEXT = (By.ID, "idSIButton9")
+    # INP_PW = (By.ID, "i0118")
     BTN_SIGNIN = (By.ID, "idSIButton9")
     BTN_ACCEPT= (By.ID, "acceptButton") # stay signed in
     # BTN_DECLINE = (By.ID, "declineButton") # stay signed in (decline)
     # BTN_CONTINUE = (By.ID, "id__0") # Misc
-    WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(INP_EMAIL)).send_keys('self.email') # wait for and enter email
+    # WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(INP_EMAIL)).send_keys('self.email') # wait for and enter email
+    # WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(BTN_NEXT)).click() # click next
+    # WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(INP_PW)).send_keys('self.password') # wait for and enter pw
+    # WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(BTN_SIGNIN)).click() # click signin 
+    # WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(BTN_ACCEPT)).click() # click accept (stay logged in) ... should we?
+
+    print('login - go')
+
+    # enter twitter account email login
+    css_selector = ".r-30o5oe.r-1dz5y72.r-13qz1uu.r-1niwhzg.r-17gur6a.r-1yadl64.r-deolkf.r-homxoj.r-poiln3.r-7cikom.r-1ny4l3l.r-t60dpp.r-fdjqy7"
+    INP_EMAIL = (By.CSS_SELECTOR, css_selector)
+    WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(INP_EMAIL)).send_keys(TWITTER_EMAIL) # wait for and enter email
+
+    # click next
+    css_selector = ".css-175oi2r.r-sdzlij.r-1phboty.r-rs99b7.r-lrvibr.r-ywje51.r-184id4b.r-13qz1uu.r-2yi16.r-1qi8awa.r-3pj75a.r-1loqt21.r-o7ynqc.r-6416eg.r-1ny4l3l"
+    BTN_NEXT = (By.CSS_SELECTOR, css_selector)
     WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(BTN_NEXT)).click() # click next
-    WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(INP_PW)).send_keys('self.password') # wait for and enter pw
-    WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(BTN_SIGNIN)).click() # click signin 
-    WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(BTN_ACCEPT)).click() # click accept (stay logged in) ... should we?
+
+    # enter twitter account password
+    css_selector = ".r-30o5oe.r-1dz5y72.r-13qz1uu.r-1niwhzg.r-17gur6a.r-1yadl64.r-deolkf.r-homxoj.r-poiln3.r-7cikom.r-1ny4l3l.r-t60dpp.r-fdjqy7"
+    INP_PW = (By.CSS_SELECTOR, css_selector)
+    WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(INP_PW)).send_keys(TWITTER_PW) # wait for and enter email
+
+    # click next
+    css_selector = ".css-175oi2r.r-sdzlij.r-1phboty.r-rs99b7.r-lrvibr.r-19yznuf.r-64el8z.r-1fkl15p.r-1loqt21.r-o7ynqc.r-6416eg.r-1ny4l3l"
+    BTN_NEXT = (By.CSS_SELECTOR, css_selector)
+    WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(BTN_NEXT)).click() # click next
+
+    err = '''
+Enter your phone number or username
+There was unusual login activity on your account. To help keep your account safe, please enter your phone number or username to verify it’s you.
+'''
+    print(f' LEFT OFF HERE ... \n {err}')
+    print('\n\ntest end ... sleep 10')
+    time.sleep(10)
+    print()
 
 def go_do_something(_pg_url='https://x.com/i/flow/login', _headless=False):
     # global WEB_DRIVER_WAIT_CNT, WEB_DRIVER_WAIT_SEC, WEB_DRIVE_WAIT_SLEEP_SEC
