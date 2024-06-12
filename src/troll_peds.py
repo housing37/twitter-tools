@@ -22,8 +22,7 @@ import time, os, traceback, sys#, json
 #   GLOBALS                                                
 #------------------------------------------------------------#
 DICT_LOGINS ={
-    "<email@domain.com>":
-    "<password>",
+    "<email@domain.com>":"<password>",
 }
 
 #------------------------------------------------------------#
