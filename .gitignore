@@ -1,6 +1,9 @@
 ###############################A
-# house_050524 (model house_021224)
+# house_062724 (model house_021224)
 ###############################
+## browser cookies
+*.pkl
+
 ## vscode
 .vscode/
 
