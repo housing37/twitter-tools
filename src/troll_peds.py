@@ -17,6 +17,7 @@ from selenium.webdriver.chrome.options import Options
 from lxml import html
 from datetime import datetime
 import time, os, traceback, sys#, json
+import pickle
 
 #------------------------------------------------------------#
 #   GLOBALS                                                
@@ -25,11 +26,25 @@ DICT_LOGINS ={
     "<email@domain.com>":"<password>",
 }
 
+COOKIES_FILE = "twitter_cookies.pkl"
+
 #------------------------------------------------------------#
 #   FUNCTIONS                                                
 #------------------------------------------------------------#
+def save_cookies(driver, location):
+    with open(location, 'wb') as filehandler:
+        pickle.dump(driver.get_cookies(), filehandler)
+    print('save_cookies - DONE')
+
+def load_cookies(driver, location):
+    with open(location, 'rb') as cookiesfile:
+        cookies = pickle.load(cookiesfile)
+        for cookie in cookies:
+            driver.add_cookie(cookie)
+
 # ref: gen_img.py (class BingImgGenerator)
 def perform_login(_driver):
+    print('perform_login - ENTER')
     # INP_EMAIL = (By.ID, "i0116")
     # BTN_NEXT = (By.ID, "idSIButton9")
     # INP_PW = (By.ID, "i0118")
@@ -42,8 +57,6 @@ def perform_login(_driver):
     # WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(INP_PW)).send_keys('self.password') # wait for and enter pw
     # WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(BTN_SIGNIN)).click() # click signin 
     # WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(BTN_ACCEPT)).click() # click accept (stay logged in) ... should we?
-
-    print('login - go')
 
     # enter twitter account email login
     css_selector = ".r-30o5oe.r-1dz5y72.r-13qz1uu.r-1niwhzg.r-17gur6a.r-1yadl64.r-deolkf.r-homxoj.r-poiln3.r-7cikom.r-1ny4l3l.r-t60dpp.r-fdjqy7"
@@ -65,14 +78,37 @@ def perform_login(_driver):
     BTN_NEXT = (By.CSS_SELECTOR, css_selector)
     WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(BTN_NEXT)).click() # click next
 
-    err = '''
-Enter your phone number or username
-There was unusual login activity on your account. To help keep your account safe, please enter your phone number or username to verify it’s you.
-'''
-    print(f' LEFT OFF HERE ... \n {err}')
-    print('\n\ntest end ... sleep 10')
+    # Save cookies after successful login
+    save_cookies(_driver, COOKIES_FILE)
+    print('\nperform_login - DONE ... sleep 10')
     time.sleep(10)
     print()
+
+#     err = '''
+# Enter your phone number or username
+# There was unusual login activity on your account. To help keep your account safe, please enter your phone number or username to verify it’s you.
+# '''
+#     print(f' LEFT OFF HERE ... \n {err}')
+#     print('\n\ntest end ... sleep 10')
+#     time.sleep(10)
+#     print()
+
+def get_driver_options(_headless=False):
+    funcname = f'{__filename} get_driver_options'
+    print(funcname + ' - ENTER')
+    options = Options()
+    if _headless:
+        print(f' using --headless={_headless}')
+        user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.111 Safari/537.36" # AWS ubuntu instance
+            # ALT testing ...
+            # user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36"
+            # user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Safari/605.1.15"
+
+        options.add_argument("--no-sandbox") # ref: https://stackoverflow.com/a/53073789 (required for 'headless' on AWS ubuntu instance)
+        options.add_argument("--headless")  # Run Chrome in headless mode
+        options.add_argument(f"user-agent={user_agent}") # required, else '--headless' fails
+        options.add_argument("--enable-javascript")
+    return options
 
 def go_do_something(_pg_url='https://x.com/i/flow/login', _headless=False):
     # global WEB_DRIVER_WAIT_CNT, WEB_DRIVER_WAIT_SEC, WEB_DRIVE_WAIT_SLEEP_SEC
@@ -80,22 +116,25 @@ def go_do_something(_pg_url='https://x.com/i/flow/login', _headless=False):
     print(funcname + ' - ENTER')
 
     try:
-        options = Options()
-        if _headless:
-            print(f' using --headless={_headless}')
-            user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.111 Safari/537.36" # AWS ubuntu instance
-            options.add_argument("--no-sandbox") # ref: https://stackoverflow.com/a/53073789 (required for 'headless' on AWS ubuntu instance)
-            options.add_argument("--headless")  # Run Chrome in headless mode
-            options.add_argument(f"user-agent={user_agent}") # required, else '--headless' fails
-            options.add_argument("--enable-javascript")  
-
-        # Initialize a Selenium WebDriver & get tweet_url page
-        print(f' getting page: {_pg_url} _ {get_time_now(dt=False)}')
+        # Initialize a Selenium WebDriver w/ driver options
+        options = get_driver_options(_headless)
         driver = webdriver.Chrome(options=options)
+
+        # get tweet_url page
+        print(f' getting page: {_pg_url} _ {get_time_now(dt=False)}')
         driver.get(_pg_url)
         print(f' getting page: {_pg_url} _ {get_time_now(dt=False)} _ DONE')
 
-        perform_login(driver)
+        # perform_login(driver)
+        if os.path.exists(COOKIES_FILE):
+            print(f' found COOKIES_FILE: {COOKIES_FILE}')
+            load_cookies(driver, COOKIES_FILE)
+            driver.refresh()
+        else:
+            print(f' no COOKIES_FILE found, proceeding w/ login ...')
+            perform_login(driver)
+
+        wait_sleep(5, b_print=True, bp_one_line=True)
 
     except Exception as e:
         print(f" Error scraping tweet\n  **Exception** e: '{e}'\n  returning False")
