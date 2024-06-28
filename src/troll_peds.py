@@ -138,6 +138,9 @@ def go_do_something(_pg_url='https://x.com/i/flow/login', _headless=False):
         # driver.get(_pg_url)
         # print(f' getting page: {_pg_url} _ {get_time_now(dt=False)} _ DONE')
 
+        # LEFT OFF HERE ... 
+        #   ref: https://stackoverflow.com/questions/15058462/how-to-save-and-load-cookies-using-python-selenium-webdriver#15058521
+        
         # perform_login(driver)
         ans = input("\n Try 'COOKIES_FILE' or try new login?\n 0 = new login\n 1 = use cookie\n > ")
         use_cookie = True if ans == '1' or ans.lower() == 'y' else False
