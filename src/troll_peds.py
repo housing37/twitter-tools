@@ -32,19 +32,32 @@ COOKIES_FILE = "twitter_cookies.pkl"
 #   FUNCTIONS                                                
 #------------------------------------------------------------#
 def save_cookies(driver, location):
+    funcname = f'save_cookies(..)'
+    print(funcname + ' - ENTER')
     with open(location, 'wb') as filehandler:
         pickle.dump(driver.get_cookies(), filehandler)
-    print('save_cookies - DONE')
+    print(funcname + ' - DONE')
 
 def load_cookies(driver, location):
+    funcname = f'load_cookies(..)'
+    print(funcname + ' - ENTER')
     with open(location, 'rb') as cookiesfile:
         cookies = pickle.load(cookiesfile)
+        driver.delete_all_cookies()
         for cookie in cookies:
+            print('  adding cookie ...')
             driver.add_cookie(cookie)
+        # cookies = pickle.load(open("cookies.pkl", "rb"))
+        # for cookie in cookies:
+        #     driver.add_cookie(cookie)
+    print(funcname + ' - DONE')
+    return driver
 
 # ref: gen_img.py (class BingImgGenerator)
 def perform_login(_driver):
-    print('perform_login - ENTER')
+    funcname = f'perform_login(.)'
+    print(funcname + ' - ENTER')
+
     # INP_EMAIL = (By.ID, "i0116")
     # BTN_NEXT = (By.ID, "idSIButton9")
     # INP_PW = (By.ID, "i0118")
@@ -79,9 +92,8 @@ def perform_login(_driver):
     WebDriverWait(_driver, 10).until(EC.element_to_be_clickable(BTN_NEXT)).click() # click next
 
     # Save cookies after successful login
-    save_cookies(_driver, COOKIES_FILE)
-    print('\nperform_login - DONE ... sleep 10')
-    time.sleep(10)
+    save_cookies(_driver, COOKIES_FILE)    
+    wait_sleep(5, b_print=True, bp_one_line=True)
     print()
 
 #     err = '''
@@ -93,8 +105,8 @@ def perform_login(_driver):
 #     time.sleep(10)
 #     print()
 
-def get_driver_options(_headless=False):
-    funcname = f'{__filename} get_driver_options'
+def gen_driver_options(_headless=False):
+    funcname = f'gen_driver_options(.)'
     print(funcname + ' - ENTER')
     options = Options()
     if _headless:
@@ -112,29 +124,45 @@ def get_driver_options(_headless=False):
 
 def go_do_something(_pg_url='https://x.com/i/flow/login', _headless=False):
     # global WEB_DRIVER_WAIT_CNT, WEB_DRIVER_WAIT_SEC, WEB_DRIVE_WAIT_SLEEP_SEC
-    funcname = f'{__filename} go_do_something'
+    funcname = f'go_do_something(..)'
     print(funcname + ' - ENTER')
 
     try:
         # Initialize a Selenium WebDriver w/ driver options
-        options = get_driver_options(_headless)
+        options = gen_driver_options(_headless)
         driver = webdriver.Chrome(options=options)
+        # driver = load_cookies(driver, COOKIES_FILE)
 
         # get tweet_url page
-        print(f' getting page: {_pg_url} _ {get_time_now(dt=False)}')
-        driver.get(_pg_url)
-        print(f' getting page: {_pg_url} _ {get_time_now(dt=False)} _ DONE')
+        # print(f' getting page: {_pg_url} _ {get_time_now(dt=False)}')
+        # driver.get(_pg_url)
+        # print(f' getting page: {_pg_url} _ {get_time_now(dt=False)} _ DONE')
 
         # perform_login(driver)
-        if os.path.exists(COOKIES_FILE):
-            print(f' found COOKIES_FILE: {COOKIES_FILE}')
-            load_cookies(driver, COOKIES_FILE)
-            driver.refresh()
-        else:
-            print(f' no COOKIES_FILE found, proceeding w/ login ...')
+        ans = input("\n Try 'COOKIES_FILE' or try new login?\n 0 = new login\n 1 = use cookie\n > ")
+        use_cookie = True if ans == '1' or ans.lower() == 'y' else False
+        # use_cookie = True
+        print(f' use_cookie={use_cookie}')
+        if not use_cookie:
+            print(f" proceeding w/ new login attempt ...")
+            print(f' getting page: {_pg_url} _ {get_time_now(dt=False)}')
+            driver.get('https://x.com/i/flow/login')
+            print(f' getting page: {_pg_url} _ {get_time_now(dt=False)} _ DONE')
             perform_login(driver)
+        else:
+            print(f" trying COOKIES_FILE={COOKIES_FILE}")
+            if os.path.exists(COOKIES_FILE):
+                print(f" found 'COOKIES_FILE' ...")
+                driver.get('https://x.com/home')
+                driver = load_cookies(driver, COOKIES_FILE)
+                # _pg_url=
+                # driver.get('https://x.com/home')
+                driver.refresh()
+            else:
+                print(f" no 'COOKIES_FILE' found\n proceeding w/ new login attempt ...")
+                perform_login(driver)
 
-        wait_sleep(5, b_print=True, bp_one_line=True)
+        wait_sleep(20, b_print=True, bp_one_line=True)
 
     except Exception as e:
         print(f" Error scraping tweet\n  **Exception** e: '{e}'\n  returning False")
@@ -149,7 +177,7 @@ def go_do_something(_pg_url='https://x.com/i/flow/login', _headless=False):
 READ_ME = f'''
     *DESCRIPTION*
         execute headless twitter integration
-         for troll based automation
+         for login/cookie based automation
 
     *NOTE* INPUT PARAMS...
         nil
